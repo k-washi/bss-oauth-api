@@ -41,11 +41,11 @@ func (h *accessTokenServiceServer) Check(ctx context.Context, r *pb.AccessTokenC
 		AccessToken: r.AccessToken.GetAccessToken(),
 	}
 
-	logger.Info(fmt.Sprintf("Access token check: UserID: %s, IP: %s", at.UserID, getIP(ctx)))
+	logger.Log.Info(fmt.Sprintf("Access token check: UserID: %s, IP: %s", at.UserID, getIP(ctx)))
 
 	upAt, err := h.service.Check(at)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Access token check error: UserID: %s", at.UserID), err)
+		logger.Log.Error(fmt.Sprintf("Access token check error: UserID: %s: %s", at.UserID, err.Error()))
 		return nil, err
 	}
 
@@ -63,12 +63,12 @@ func (h *accessTokenServiceServer) Create(ctx context.Context, r *pb.AccessToken
 	//h.mu.Lock()
 	//defer h.mu.Unlock()
 	userID := r.UserId.GetUserId()
-	logger.Info(fmt.Sprintf("Access token create: UserID: %s, IP: %s", userID, getIP(ctx)))
+	logger.Log.Info(fmt.Sprintf("Access token create: UserID: %s, IP: %s", userID, getIP(ctx)))
 
 	at, err := h.service.Create(userID)
 
 	if err != nil {
-		logger.Error(fmt.Sprintf("Access token create error: UserID: %s", at.UserID), err)
+		logger.Log.Error(fmt.Sprintf("Access token create error: UserID: %s: %s", at.UserID, err.Error()))
 		return nil, err
 	}
 

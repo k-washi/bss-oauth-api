@@ -9,12 +9,15 @@ type DbRepositry interface {
 	GetByID(string) (*accesstoken.AccessToken, error)
 	Create(accesstoken.AccessToken) error
 	Delete(string) error
-	UpdateExpirationTime(string) error
+	UpdateExpirationTime(accesstoken.AccessToken) error
 }
 
 //NewRepository get db repository
-func NewRepository() DbRepositry {
-	return &dbRepositry{}
+func NewRepository(dbName string) DbRepositry {
+	if dbName == "mysql" {
+		return &dbRepositry{}
+	}
+	return &testdbRepositry{}
 }
 
 type dbRepositry struct{}
@@ -36,6 +39,6 @@ func (r *dbRepositry) Delete(userID string) error {
 }
 
 //UpdateExpirationTime
-func (r *dbRepositry) UpdateExpirationTime(userID string) error {
+func (r *dbRepositry) UpdateExpirationTime(at accesstoken.AccessToken) error {
 	return nil
 }

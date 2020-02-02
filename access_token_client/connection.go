@@ -14,11 +14,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/k-washi/bss-oauth-api/src/domain/accesstoken"
-
-	"github.com/k-washi/bss-utils/logger"
-
 	pb "github.com/k-washi/bss-oauth-api/access_token_proto"
+	"github.com/k-washi/bss-oauth-api/src/domain/accesstoken"
+	"github.com/k-washi/bss-utils/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -72,6 +70,7 @@ func init() {
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
+	//opts = append(opts, grpc.WithUnaryInterceptor(grpc_zap.UnaryClientInterceptor(logger.Log)))
 	//opts = append(opts, grpc.WithBlock()) //接続確立のためブロック
 
 }
@@ -79,7 +78,7 @@ func init() {
 func connection() (*grpc.ClientConn, error) {
 	conn, err := grpc.Dial(address, opts...)
 	if err != nil {
-		logger.Error("GRPC Client connection error", err)
+		logger.Log.Error(fmt.Sprintf("GRPC Client connection error: %s", err.Error()))
 		return nil, errors.New("GRPC Client connection error")
 	}
 	return conn, nil
@@ -109,7 +108,7 @@ func Check(at accesstoken.AccessToken) error {
 		grpcErrorCheck(err)
 		return err
 	}
-	logger.Debug(fmt.Sprintf("gRPC AT Check successs:%s", at.UserID))
+	logger.Log.Debug(fmt.Sprintf("gRPC AT Check successs:%s", at.UserID))
 	return nil
 
 }
@@ -138,7 +137,7 @@ func Create(userID string) (*accesstoken.AccessToken, error) {
 		grpcErrorCheck(err)
 		return nil, err
 	}
-	logger.Debug(fmt.Sprintf("gRPC AT Create successs:%s", userID))
+	logger.Log.Debug(fmt.Sprintf("gRPC AT Create successs:%s", userID))
 
 	return &accesstoken.AccessToken{
 		UserID:      userID,
@@ -151,17 +150,17 @@ func grpcErrorCheck(err error) {
 	respErr, ok := status.FromError(err)
 	if ok {
 		if respErr.Code() == codes.InvalidArgument {
-			logger.Error("gRPC AT invalid argument", err)
+			logger.Log.Error(fmt.Sprintf("gRPC AT invalid argument: %s", err.Error()))
 			//invalid argument
 			//this error is possible unauthorized access by user
 		} else if respErr.Code() == codes.DeadlineExceeded {
-			logger.Error("gRPC AT Time Out", err)
+			logger.Log.Error(fmt.Sprintf("gRPC AT Time Out: %s", err.Error()))
 		} else if respErr.Code() == codes.Internal {
-			logger.Error("gRPC Internal error", err)
+			logger.Log.Error(fmt.Sprintf("gRPC Internal error: %s", err.Error()))
 		} else {
-			logger.Error("gRPC AT Unkown error", err)
+			logger.Log.Error(fmt.Sprintf("gRPC AT Unkown error: %s", err.Error()))
 		}
 	} else {
-		logger.Error("gRPC Check error", err)
+		logger.Log.Error(fmt.Sprintf("gRPC Check error: %s", err.Error()))
 	}
 }

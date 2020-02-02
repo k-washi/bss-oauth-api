@@ -18,17 +18,22 @@ import (
 var (
 	host     string
 	port     string
+	address  string
 	tls      bool
 	keyFile  string
 	certFile string
+	database string
 )
 
 func init() {
 	host = os.Getenv("GRPC_AT_HOST")
-	port := os.Getenv("GRPC_ACT_PORT")
+	port := os.Getenv("GRPC_AT_PORT")
 	if port == "" {
 		port = "30001"
 	}
+	address = fmt.Sprintf("%s:%s", host, port)
+
+	//tls setting
 	var err error
 	tls, err = strconv.ParseBool(os.Getenv("GRPC_AT_TLS"))
 	if err != nil {
@@ -45,13 +50,17 @@ func init() {
 		}
 	}
 
+	//database
+	database = os.Getenv("AT_DATABASE")
+
 }
 
+//StartApplication start grpc server for access token managoing
 func StartApplication() {
-	grpcHandler := server.NewAccessTokenServiceServer(service.NewService(db.NewRepository()))
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", host, port))
+	grpcHandler := server.NewAccessTokenServiceServer(service.NewService(db.NewRepository(database)))
+	lis, err := net.Listen("tcp", address)
 	if err != nil {
-		logger.Error("Failed to listen", err)
+		logger.Log.Error(fmt.Sprintf("Failed to listen: %s", err.Error()))
 		panic(err)
 	}
 
@@ -59,13 +68,15 @@ func StartApplication() {
 	if tls {
 		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
 		if err != nil {
-			logger.Error("Failed to generate credentials", err)
+			logger.Log.Error(fmt.Sprintf("Failed to generate credentials: %s", err.Error()))
 			panic(err)
 		}
 		opts = []grpc.ServerOption{
 			grpc.Creds(creds),
 		}
 	}
+
+	//opts = append(opts, grpc.UnaryInterceptor(grpc_zap.UnaryServerInterceptor(logger.Log)))
 
 	//Keepalive
 	/*
@@ -76,10 +87,10 @@ func StartApplication() {
 	*/
 
 	grpcServer := grpc.NewServer(opts...)
-	logger.Info("NewServer...")
+	logger.Log.Info(fmt.Sprintf("NewServer... %s", address))
 	pb.RegisterAccessTokenServiceServer(grpcServer, grpcHandler)
-	logger.Debug("Set grpc Handler")
+	logger.Log.Debug("Set grpc Handler")
 	grpcServer.Serve(lis)
-	logger.Info("Start session application")
+	logger.Log.Info("Start session application")
 
 }
