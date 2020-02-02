@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package access_token_proto;
+option go_package="access_token_proto";
+
+message AccessToken {
+  string user_id = 1;
+  string access_token = 2;
+}
+
+message UserID {
+  string user_id = 1;
+}
+
+message AccessTokenCheck {
+  AccessToken access_token = 1;
+}
+
+message AccessTokenGet {
+  UserID user_id = 1;
+}
+
+message AccessTokenCreate {
+  UserID user_id  = 1;
+}
+
+
+//status https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
+message AccessTokenResponse {
+  AccessToken access_token = 1;
+  uint32 status = 2;
+  string msg = 3;
+}
+
+
+service AccessTokenService{
+  //Check
+  rpc Check(AccessTokenCheck) returns (AccessTokenResponse) {}
+
+  //Get
+  rpc Get(AccessTokenGet) returns (AccessTokenResponse) {}
+
+  //UPDATE
+  rpc Create(AccessTokenCreate) returns (AccessTokenResponse) {}
+}
